@@ -223,8 +223,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 🦶 FOOTER */}
-        <FooterBar />
+              
       </main>
     </>
   );
