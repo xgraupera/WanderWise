@@ -15,4 +15,93 @@ model User {
   password       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  trips    Trip[]
+}
+
+
+model Trip {
+  id           Int           @id @default(autoincrement())
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  durationDays Int
+  travelers    Int           @default(1)
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
+  budgets      Budget[]
+  itineraries  Itinerary[]
+  reservations Reservation[]
+  checklists   Checklist[]
+  expenses     Expense[]
+  createdAt    DateTime      @default(now())
+}
+
+model Budget {
+  id         Int    @id @default(autoincrement())
+  category   String
+  budget     Float
+  spent      Float  @default(0)
+  overbudget Float  @default(0)
+  percentage Float  @default(0)
+  tripId     Int
+  trip       Trip   @relation(fields: [tripId], references: [id])
+
+  @@unique([tripId, category])
+}
+
+model Itinerary {
+  id       Int      @id @default(autoincrement())
+  day      Int
+  date     DateTime
+  city     String
+  activity String
+  notes    String?
+  tripId   Int
+  trip     Trip     @relation(fields: [tripId], references: [id])
+
+  @@unique([tripId, day])
+}
+
+model Reservation {
+  id          Int      @id @default(autoincrement())
+  type        String
+  provider    String
+  bookingDate DateTime
+  date        DateTime
+  cancellationDate DateTime? 
+  amount      Float
+  confirmed   Boolean  @default(false)
+  link        String?
+  tripId      Int
+  trip        Trip     @relation(fields: [tripId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Checklist {
+  id       Int     @id @default(autoincrement())
+  category String
+  task     String
+  done     Boolean @default(false)
+  notes    String?
+  tripId   Int
+  trip     Trip    @relation(fields: [tripId], references: [id])
+
+  @@index([tripId])
+}
+
+model Expense {
+  id                Int       @id @default(autoincrement())
+  userId            String
+  tripId            Int
+  date              DateTime?
+  place             String?
+  category          String?
+  description       String?
+  amount             Float?
+  paidBy            String?
+  amountPerTraveler Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Trip      Trip     @relation(fields: [tripId], references: [id])
 }
