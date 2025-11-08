@@ -118,12 +118,12 @@ export default function TripMainPage() {
     <NavBar tripId={tripId} />
 
     {/* ✅ Contenido principal */}
-    <main className="p-8 space-y-10">
+    <main className="p-8 space-y-10 bg-gray-50">
       {/* Intro del viaje */}
       <section>
-        <h1 className="text-3xl font-bold mb-4 text-[#001e42]">{trip.name} — Main Overview</h1>
+        <h1 className="text-3xl font-bold mb-4">{trip.name} — Main Overview</h1>
           
-        <p className="text-gray-700 text-lg max-w-2xl mx-auto leading-relaxed">
+        <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
           Welcome to your travel journal.  
           See your trip at a glance — key dates, destinations, and travelers, all beautifully organized in one place.
         </p>

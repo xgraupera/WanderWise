@@ -133,9 +133,12 @@ export default function ChecklistPage() {
   return (
     <>
       <NavBar tripId={tripId} />
-      <main className="p-8 space-y-8">
-        <h1 className="text-3xl font-bold">🧾 Travel Checklist</h1>
-
+      <main className="p-8 space-y-10 bg-gray-50 min-h-screen">
+        <h1 className="text-3xl font-bold mb-4">🧾 Travel Checklist</h1>
+<p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
+  Don’t leave anything behind.  
+  Create your packing list, check off what’s ready, and travel knowing you have everything you need.
+</p>
         <section className="bg-white p-6 rounded-lg shadow-md">
           {/* Tabla principal */}
           <table className="w-full border border-gray-300 text-sm">

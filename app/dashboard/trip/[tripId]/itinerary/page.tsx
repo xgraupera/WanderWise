@@ -132,10 +132,10 @@ export default function ItineraryPage() {
   return (
     <>
       <NavBar tripId={tripId} />
-      <main className="p-8 space-y-8">
-        <div className="flex justify-between items-center">
+      <main className="p-8 space-y-10 bg-gray-50">
+        
           <h1 className="text-3xl font-bold mb-4">🗓️ Trip Itinerary</h1>
-        </div>
+        
         <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
   Make every day count.  
   Plan your activities, destinations, and personal notes so your trip flows effortlessly and stress-free.

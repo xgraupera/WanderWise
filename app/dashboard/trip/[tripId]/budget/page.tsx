@@ -103,8 +103,8 @@ export default function BudgetPage() {
   return (
     <>
       <NavBar tripId={tripId} />
-      <main className="p-8 space-y-8">
-        <h1 className="text-3xl font-bold">💰 Budget Planning</h1>
+      <main className="p-8 space-y-10 bg-gray-50">
+        <h1 className="text-3xl font-bold mb-4">💰 Budget Planning</h1>
 <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
   Travel freely by planning wisely.  
   Set your budget for each category and let WanderWisely help you stay on track every step of the journey.

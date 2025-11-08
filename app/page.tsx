@@ -102,7 +102,7 @@ export default function HomePage() {
 
     
 
-      <main className="min-h-screen flex flex-col bg-gradient-to-b from-white to-[#f9f9f9] ">
+      <main className="flex flex-col bg-gradient-to-b from-white to-[#f9f9f9] ">
         {/* 🏞️ HERO SECTION */}
         <section className="flex flex-col items-center justify-center flex-grow bg-[#001e42] text-center px-6 py-20 md:px-12">
            <Image

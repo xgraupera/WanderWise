@@ -241,7 +241,7 @@ export default function ExpensesPage() {
   return (
     <>
       <NavBar tripId={tripId} />
-      <main className="p-8 space-y-10 bg-gray-50 min-h-screen">
+      <main className="p-8 space-y-10 bg-gray-50">
         <h1 className="text-3xl font-bold mb-4">💳 Expenses Log</h1>
         <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
   Your journey, your numbers.  

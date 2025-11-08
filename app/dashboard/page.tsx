@@ -97,10 +97,10 @@ export default function DashboardPage() {
   return (
     <>
       <NavBar />
-      <main className="p-8 space-y-8 bg-gray-50 min-h-screen">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold mb-4 text-[#001e42]">Your Dashboard</h1>
-        </div>
+      <main className="p-8 space-y-10 bg-gray-50">
+        
+          <h1 className="text-3xl font-bold mb-4">Your Dashboard</h1>
+      
 
         <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
           Every great adventure begins here.  

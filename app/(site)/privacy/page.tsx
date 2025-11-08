@@ -6,7 +6,7 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <NavBar />
-      <main className="p-8 bg-gray-50 min-h-screen text-center space-y-8">
+      <main className="p-8 bg-gray-50 text-center space-y-8">
         <h1 className="text-4xl font-bold">🔒 Privacy Policy</h1>
 
         <section className="max-w-3xl mx-auto text-gray-700 leading-relaxed space-y-4 text-justify">

@@ -49,7 +49,8 @@ function ResetPasswordForm() {
     );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
+    <main className="p-8 space-y-10 bg-gray-50">
+    <div className="flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="bg-white shadow-md rounded-2xl p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold mb-4 text-center">
           🔒 Reset Password
@@ -99,6 +100,7 @@ function ResetPasswordForm() {
         )}
       </div>
     </div>
+    </main>
   );
 }
 
