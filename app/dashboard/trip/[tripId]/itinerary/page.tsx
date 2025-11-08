@@ -134,12 +134,16 @@ export default function ItineraryPage() {
       <NavBar tripId={tripId} />
       <main className="p-8 space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">🗓️ Trip Itinerary</h1>
+          <h1 className="text-3xl font-bold mb-4">🗓️ Trip Itinerary</h1>
         </div>
+        <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
+  Make every day count.  
+  Plan your activities, destinations, and personal notes so your trip flows effortlessly and stress-free.
+</p>
 
         <section className="bg-white p-6 rounded-lg shadow-md">
           <table className="w-full border border-gray-300 text-sm">
-            <thead className="bg-[#0c454a] text-white">
+            <thead className="bg-[#001e42] text-white">
               <tr>
                 <th className="p-2">Day</th>
                 <th className="p-2">Date</th>
@@ -244,7 +248,7 @@ export default function ItineraryPage() {
           <div className="mt-6 flex flex-col gap-4">
             <button
               onClick={addDay}
-              className="w-full bg-[#0c454a] text-white py-2 rounded-lg hover:bg-[#13636a] transition"
+              className="w-full bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition"
             >
               + Add Day
             </button>
@@ -252,7 +256,7 @@ export default function ItineraryPage() {
             <button
               onClick={saveItinerary}
               disabled={saving}
-              className="w-full bg-[#0c454a] text-white py-2 rounded-lg hover:bg-[#13636a] transition"
+              className="w-full bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition"
             >
               {saving ? "Saving..." : "Save Itinerary"}
             </button>

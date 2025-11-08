@@ -1,32 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
-import type { ReactNode } from "react"; // ✅ importa el tipo
-import { Inter } from "next/font/google";
-import NavBar from "@/components/NavBar";
+import type { ReactNode } from "react";
 import FooterBar from "@/components/FooterBar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata = {
-  title: "Wanderwise",
-  description: "Planifica tus viajes con inteligencia 🌍"
+export const metadata: Metadata = {
+  title: "WanderWisely",
+  description: "Plan your trips wisely 🌍",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
-      <body className={`${inter.className} bg-[#EAEAEA] text-[#2E3A3A] font-sans`}>
+      <body
+        className={`${poppins.className} bg-[#F9F8F4] text-[#001e42] font-sans`}
+      >
         {children}
         <FooterBar />
       </body>

@@ -32,10 +32,11 @@ export async function POST(request: Request) {
 
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const durationDays = Math.ceil(
-    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  // duración en días (incluye ambos extremos)
+  const durationDays =
+    Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
+  // 🔹 Crear el viaje (sin cambiar nada de tu implementación original)
   const newTrip = await prisma.trip.create({
     data: {
       name,
@@ -46,6 +47,29 @@ export async function POST(request: Request) {
       userId: user!.id,
     },
   });
+
+  // 🔹 Generar itinerario inicial SOLO al crear el viaje (si no existe)
+  try {
+    const existing = await prisma.itinerary.findFirst({
+      where: { tripId: newTrip.id },
+    });
+
+    if (!existing) {
+      const itineraryData = Array.from({ length: durationDays }, (_, i) => ({
+        day: i + 1,
+        date: new Date(start.getTime() + i * 86400000),
+        city: "",
+        activity: "",
+        notes: "",
+        tripId: newTrip.id,
+      }));
+
+      await prisma.itinerary.createMany({ data: itineraryData });
+    }
+  } catch (err) {
+    // No interrumpimos la creación del trip si algo falla aquí
+    console.error("⚠️ Error generating itinerary automatically:", err);
+  }
 
   return NextResponse.json(newTrip);
 }

@@ -11,17 +11,22 @@
   "dependencies": {
     "@prisma/client": "^6.19.0",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "lucide-react": "^0.552.0",
     "next": "16.0.1",
     "next-auth": "^4.24.13",
+    "nodemailer": "^7.0.10",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "recharts": "^3.3.0"
+    "recharts": "^3.3.0",
+    "resend": "^6.4.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",

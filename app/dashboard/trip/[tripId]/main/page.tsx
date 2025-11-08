@@ -17,6 +17,7 @@ interface Trip {
   travelers: number;
 }
 
+
 export default function TripMainPage() {
   const params = useParams(); // ✅ obtiene el tripId del path
   const router = useRouter();
@@ -112,16 +113,29 @@ export default function TripMainPage() {
   const remaining = (budget - spent).toFixed(2);
 
   return (
-    <>
-      <NavBar tripId={tripId} />
-      <main className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <>
+    {/* ✅ Navbar fija arriba */}
+    <NavBar tripId={tripId} />
+
+    {/* ✅ Contenido principal */}
+    <main className="p-8 space-y-10">
+      {/* Intro del viaje */}
+      <section>
+        <h1 className="text-3xl font-bold mb-4 text-[#001e42]">{trip.name} — Main Overview</h1>
+          
+        <p className="text-gray-700 text-lg max-w-2xl mx-auto leading-relaxed">
+          Welcome to your travel journal.  
+          See your trip at a glance — key dates, destinations, and travelers, all beautifully organized in one place.
+        </p>
+      </section>
+
+         
+
+      {/* Grid principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Columna izquierda: datos del viaje */}
         <section className="bg-white p-6 rounded-xl shadow-md lg:col-span-2 space-y-6">
-          <h1 className="text-3xl font-bold text-[#0c454a]">
-            {trip.name} — Main Overview
-          </h1>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-gray-600">Trip Name</label>
               <input
@@ -218,15 +232,14 @@ export default function TripMainPage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-[#0c454a] text-white px-4 py-2 rounded-lg hover:bg-[#09616d] transition disabled:opacity-60"
+              className="bg-[#001e42] text-white px-4 py-2 rounded-lg hover:bg-[#DCC9A3] transition disabled:opacity-60"
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
 
-            {/* ✅ Botón volver al dashboard */}
             <button
               onClick={() => router.push("/dashboard")}
-              className="bg-gray-200 text-[#0c454a] px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+              className="bg-[#001e42] text-white px-4 py-2 rounded-lg hover:bg-[#DCC9A3] transition"
             >
               ← Back to Dashboard
             </button>
@@ -235,14 +248,14 @@ export default function TripMainPage() {
 
         {/* Columna derecha: accesos rápidos */}
         <section className="bg-white p-6 rounded-xl shadow-md h-fit">
-          <h2 className="text-xl font-semibold mb-4 text-[#0c454a]">
+          <h3 className="text-xl font-semibold mb-4 text-[#001e42]">
             Quick Access
-          </h2>
-          <ul className="space-y-3 text-[#0c454a]">
+          </h3>
+          <ul className="space-y-3 text-white">
             <li>
               <a
                 href={`/dashboard/trip/${tripId}/budget`}
-                className="block border p-3 rounded-lg hover:bg-[#0c454a] hover:text-white transition"
+                className="block bg-[#001e42] p-3 rounded-lg hover:bg-[#DCC9A3] hover:text-white transition"
               >
                 💰 Budget Planning
               </a>
@@ -250,38 +263,36 @@ export default function TripMainPage() {
             <li>
               <a
                 href={`/dashboard/trip/${tripId}/itinerary`}
-                className="block border p-3 rounded-lg hover:bg-[#0c454a] hover:text-white transition"
-              >
+className="block bg-[#001e42] p-3 rounded-lg hover:bg-[#DCC9A3] hover:text-white transition"              >
                 🗓️ Trip Itinerary
               </a>
             </li>
             <li>
               <a
                 href={`/dashboard/trip/${tripId}/reservations`}
-                className="block border p-3 rounded-lg hover:bg-[#0c454a] hover:text-white transition"
-              >
+className="block bg-[#001e42] p-3 rounded-lg hover:bg-[#DCC9A3] hover:text-white transition"              >
                 ✈️ Reservations Tracker
               </a>
             </li>
             <li>
               <a
                 href={`/dashboard/trip/${tripId}/checklist`}
-                className="block border p-3 rounded-lg hover:bg-[#0c454a] hover:text-white transition"
-              >
+className="block bg-[#001e42] p-3 rounded-lg hover:bg-[#DCC9A3] hover:text-white transition"              >
                 🧾 Travel Checklist
               </a>
             </li>
             <li>
               <a
                 href={`/dashboard/trip/${tripId}/expenses`}
-                className="block border p-3 rounded-lg hover:bg-[#0c454a] hover:text-white transition"
-              >
-                💳 Expense Tracker
+className="block bg-[#001e42] p-3 rounded-lg hover:bg-[#DCC9A3] hover:text-white transition"              >
+                💳 Expense Log
               </a>
             </li>
           </ul>
         </section>
-      </main>
-    </>
-  );
+      </div>
+    </main>
+  </>
+);
+
 }

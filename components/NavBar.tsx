@@ -24,10 +24,15 @@ export default function NavBar({ tripId }: NavBarProps) {
     : [];
 
   return (
-    <nav className="bg-[#0c454a] text-white px-6 py-3 flex justify-between items-center shadow-lg">
-      <Link href="/dashboard" className="text-lg font-bold hover:text-[#DCC9A3] transition">
-        🧭 Wanderwise
-      </Link>
+    <nav className="shadow-md bg-[#001e42] text-white px-6 py-3 flex justify-between items-center shadow-lg">
+      <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold hover:text-[#DCC9A3] transition">
+    <img
+      src="/icon.png"
+      alt="WanderWisely logo"
+      className="w-6 h-6"
+    />
+    <span>WanderWisely</span>
+  </Link>
 
       <div className="flex gap-4 items-center">
         {tripId &&
@@ -45,7 +50,7 @@ export default function NavBar({ tripId }: NavBarProps) {
 
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="bg-red-500 px-3 py-1 rounded-lg hover:bg-red-600 transition"
+          className="bg-[#025fd1] px-3 py-1 rounded-lg hover:bg-[#DCC9A3] transition"
         >
           Logout
         </button>

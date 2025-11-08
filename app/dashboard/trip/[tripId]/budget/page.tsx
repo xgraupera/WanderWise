@@ -17,6 +17,7 @@ interface BudgetItem {
   percentage?: number;
 }
 
+
 export default function BudgetPage() {
   const params = useParams(); 
   const tripIdParam = params?.tripId;
@@ -60,6 +61,11 @@ export default function BudgetPage() {
     setBudget((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const totalOverbudget = budget.reduce(
+  (sum, c) => sum + Math.max(0, (c.spent || 0) - (c.budget || 0)),
+  0
+);
+
   async function saveBudget() {
     setSaving(true);
     const prepared = budget.map((b) => ({
@@ -99,16 +105,20 @@ export default function BudgetPage() {
       <NavBar tripId={tripId} />
       <main className="p-8 space-y-8">
         <h1 className="text-3xl font-bold">💰 Budget Planning</h1>
-
+<p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
+  Travel freely by planning wisely.  
+  Set your budget for each category and let WanderWisely help you stay on track every step of the journey.
+</p>
         <section className="bg-white p-6 rounded-lg shadow-md">
           <table className="w-full border border-gray-300 text-sm">
-            <thead className="bg-[#0c454a] text-white">
+            <thead className="bg-[#001e42] text-white">
               <tr>
                 <th className="p-2">Category</th>
                 <th className="p-2">Budget (€)</th>
+                <th className="p-2">% of Total Budget</th>
                 <th className="p-2">Spent by Traveler (€)</th>
                 <th className="p-2">Overbudget (€)</th>
-                <th className="p-2">% of Total Budget</th>
+                
                 <th className="p-2">Actions</th>
               </tr>
             </thead>
@@ -141,7 +151,7 @@ export default function BudgetPage() {
                         }
                       />
                     </td>
-
+<td className="p-2 text-center">{pct}%</td>
                     {/* Spent (readonly) */}
                     <td className="p-2 text-center">
                       <input
@@ -153,15 +163,34 @@ export default function BudgetPage() {
                     </td>
 
                     <td className="p-2 text-center">{over.toFixed(2)}</td>
-                    <td className="p-2 text-center">{pct}%</td>
-                    <td className="p-2 text-center">
-                      <button
-                        onClick={() => deleteCategory(i)}
-                        className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                      >
-                        ✕
-                      </button>
-                    </td>
+                    
+                    
+
+<td className="p-2 text-center">
+  <button
+    onClick={() => {
+      if (item.spent > 0) {
+        alert("⚠️ This category cannot be deleted because it already has expenses.");
+        return;
+      }
+      deleteCategory(i);
+    }}
+    disabled={item.spent > 0}
+    className={`px-2 py-1 rounded text-white ${
+      item.spent > 0
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-red-500 hover:bg-red-600"
+    }`}
+    title={
+      item.spent > 0
+        ? "Cannot delete a category with existing expenses"
+        : "Delete this category"
+    }
+  >
+    ✕
+  </button>
+</td>
+
                   </tr>
                 );
               })}
@@ -172,11 +201,12 @@ export default function BudgetPage() {
               <tr>
                 <td className="p-2">Total</td>
                 <td className="p-2">{totalBudget.toFixed(2)}</td>
+                <td className="p-2"> - </td>
                 <td className="p-2">{totalSpent.toFixed(2)}</td>
                 <td className="p-2">
-                  {Math.max(0, totalSpent - totalBudget).toFixed(2)}
+                  {totalOverbudget.toFixed(2)}
                 </td>
-                <td className="p-2"> - </td>
+                
                 <td></td>
               </tr>
             </tfoot>
@@ -192,7 +222,7 @@ export default function BudgetPage() {
             />
             <button
               onClick={addCategory}
-              className="bg-[#0c454a] text-white px-4 py-2 rounded-lg hover:bg-[#13636a] transition"
+              className="bg-[#001e42] text-white px-4 py-2 rounded-lg hover:bg-[#DCC9A3] transition"
             >
               + Add Category
             </button>
@@ -202,7 +232,7 @@ export default function BudgetPage() {
             <button
               onClick={saveBudget}
               disabled={saving}
-              className="w-full bg-[#0c454a] text-white py-2 rounded-lg hover:bg-[#13636a] transition"
+              className="w-full bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition"
             >
               {saving ? "Saving..." : "Save Budget"}
             </button>

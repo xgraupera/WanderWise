@@ -1,4 +1,3 @@
-// /app/api/budget/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
@@ -14,7 +13,7 @@ const defaultCategories = [
   "Others",
 ];
 
-// 🟢 GET budgets (incluye spent desde Expenses)
+// 🟢 GET budgets (lee presupuestos y gastos)
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -22,15 +21,15 @@ export async function GET(req: Request) {
     if (!tripId)
       return NextResponse.json({ error: "Missing tripId" }, { status: 400 });
 
-    // 🔹 Obtener budgets actuales
+    // 🔹 Ver si ya existen budgets
     let budgets = await prisma.budget.findMany({ where: { tripId } });
 
-    // 🔹 Crear las categorías por defecto si no existen
+    // 🟩 Si no hay ninguno, crear los de por defecto (solo la primera vez)
     if (budgets.length === 0) {
       await prisma.budget.createMany({
         data: defaultCategories.map((cat) => ({
           tripId,
-          category: cat as string,
+          category: cat,
           budget: 0,
           spent: 0,
           overbudget: 0,
@@ -40,42 +39,14 @@ export async function GET(req: Request) {
       budgets = await prisma.budget.findMany({ where: { tripId } });
     }
 
-    // 🔹 Obtener gastos agrupados por categoría
+    // 🔹 Calcular spent (desde Expenses)
     const expenses = await prisma.expense.groupBy({
       by: ["category"],
       where: { tripId },
       _sum: { amountPerTraveler: true },
     });
 
-    // 🔹 Unir las categorías de Budget, Expenses y defaultCategories
-    const allCategories = Array.from(
-      new Set([
-        ...defaultCategories,
-        ...budgets.map((b) => b.category),
-        ...expenses.map((e) => e.category),
-      ])
-    );
-
-    // 🔹 Actualizar o crear Budget si hay nuevas categorías
-    for (const cat of allCategories) {
-      if (!budgets.some((b) => b.category === cat)) {
-        await prisma.budget.create({
-          data: {
-            tripId,
-            category: cat as string,
-            budget: 0,
-            spent: 0,
-            overbudget: 0,
-            percentage: 0,
-          },
-        });
-      }
-    }
-
-    // 🔹 Releer budgets actualizados
-    budgets = await prisma.budget.findMany({ where: { tripId } });
-
-    // 🔹 Actualizar spent automáticamente
+    // 🔹 Actualizar los campos derivados
     const updated = budgets.map((b) => {
       const match = expenses.find((e) => e.category === b.category);
       const spent = match?._sum.amountPerTraveler || 0;
@@ -91,17 +62,16 @@ export async function GET(req: Request) {
   }
 }
 
-// 🔵 POST budgets (añade o actualiza categorías)
+// 🔵 POST budgets (guarda cambios manuales del usuario)
 export async function POST(req: Request) {
   try {
     const { tripId, budgets } = await req.json();
     if (!tripId || !Array.isArray(budgets))
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
 
-    // 🔹 Eliminar anteriores
+    // 🔹 Eliminar los anteriores y crear los nuevos
     await prisma.budget.deleteMany({ where: { tripId } });
 
-    // 🔹 Crear nuevos registros
     await prisma.budget.createMany({
       data: budgets.map((b) => ({
         tripId,

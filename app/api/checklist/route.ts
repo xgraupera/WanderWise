@@ -1,10 +1,10 @@
-// 📄 app/api/checklist/route.ts
+// ✅ app/api/checklist/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// 🔹 Checklist inicial por defecto
+// 🧾 Default checklist (si no hay nada guardado)
 const defaultChecklist = [
   { category: "Documents", task: "ID and Passport", notes: "" },
   { category: "Documents", task: "Visa", notes: "" },
@@ -18,22 +18,25 @@ const defaultChecklist = [
   { category: "Technology", task: "Charger and Plug Adapters", notes: "" },
   { category: "Technology", task: "Power Bank", notes: "" },
   { category: "Technology", task: "International SIM Card/eSIM", notes: "" },
+  { category: "Others", task: "Other items", notes: "" },
 ];
 
-// 🟢 GET - Obtener checklist de un viaje
+// 🟢 GET — obtener checklist por tripId
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tripId = Number(searchParams.get("tripId"));
-    if (!tripId) return NextResponse.json({ error: "Missing tripId" }, { status: 400 });
+
+    if (!tripId || isNaN(tripId))
+      return NextResponse.json({ error: "Missing or invalid tripId" }, { status: 400 });
 
     const checklist = await prisma.checklist.findMany({
       where: { tripId },
       orderBy: { id: "asc" },
     });
 
+    // Si no hay checklist guardada, devolver default con done=false
     if (checklist.length === 0) {
-      // Si no hay registros, devolver la lista por defecto
       return NextResponse.json(
         defaultChecklist.map((c) => ({ ...c, done: false }))
       );
@@ -46,7 +49,7 @@ export async function GET(req: Request) {
   }
 }
 
-// 🟢 POST - Guardar o actualizar checklist
+// 🟢 POST — guardar checklist
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -56,21 +59,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
     }
 
-    // 🔸 Borrar checklist anterior del viaje
-    await prisma.checklist.deleteMany({ where: { tripId } });
+    // Eliminar checklist previa para ese viaje
+    await prisma.checklist.deleteMany({ where: { tripId: Number(tripId) } });
 
-    // 🔸 Insertar nueva lista
-    const created = await prisma.checklist.createMany({
-      data: checklist.map((c: any) => ({
-        tripId: Number(tripId),
-        category: c.category || "",
-        task: c.task || "",
-        notes: c.notes || "",
-        done: Boolean(c.done),
-      })),
+    // Crear nuevas filas una por una
+    const createdItems = await Promise.all(
+      checklist.map(async (item: any) => {
+        if (!item.task?.trim()) return null; // evitar crear tareas vacías
+        return prisma.checklist.create({
+          data: {
+            tripId: Number(tripId),
+            category: item.category || "Uncategorized",
+            task: item.task || "",
+            notes: item.notes || "",
+            done: Boolean(item.done),
+          },
+        });
+      })
+    );
+
+    return NextResponse.json({
+      message: "✅ Checklist saved successfully",
+      count: createdItems.filter(Boolean).length,
     });
-
-    return NextResponse.json({ message: "Checklist saved successfully", created });
   } catch (error: any) {
     console.error("❌ Error saving checklist:", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });

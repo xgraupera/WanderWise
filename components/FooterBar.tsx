@@ -43,15 +43,12 @@ export default function FooterBar({ tripId }: FooterBarProps) {
   ];
 
   return (
-    <footer className="bg-[#0c454a] text-white py-10 px-6 mt-12">
+    <footer className="bg-[#001e42] text-white py-10 px-6 mt-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* 🌍 Column 1: Branding */}
         <div>
-          <Link href="/dashboard" className="text-2xl hover:text-[#DCC9A3] font-bold block mb-3">
-            🧭 Wanderwise
-          </Link>
           <p className="text-sm text-gray-300">
-            Plan smart, travel wiser.
+            Wander Smart. Travel Wisely.
           </p>
           <p className="text-sm text-gray-300">Manage every aspect of your trip effortlessly.</p>
         </div>
@@ -121,8 +118,9 @@ export default function FooterBar({ tripId }: FooterBarProps) {
       </div>
 
       {/* 📍 Bottom bar */}
-      <div className="mt-8 border-t border-gray-700 pt-4 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} WanderWise Ltd — Plan your next adventure ✈️
+       <div className="mt-8 border-t border-gray-700 pt-4 text-center text-sm text-gray-400">
+        <p>Version 1.0</p>
+        © {new Date().getFullYear()} WanderWisely Ltd — Plan your next adventure ✈️
       </div>
     </footer>
   );

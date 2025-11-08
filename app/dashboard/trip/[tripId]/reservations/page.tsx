@@ -231,21 +231,28 @@ export default function ReservationsPage({ params }: Props) {
 
   if (loading)
     return (
-      <>
-        <NavBar tripId={tripId} />
-        <main className="p-8 text-center text-gray-600">Loading trip information...</main>
-      </>
-    );
+          <>
+            <NavBar tripId={tripId} />
+            <main className="p-8 text-center">
+              <p className="text-lg text-gray-600">Loading trip information...</p>
+            </main>
+          </>
+        );
+
+    
 
   return (
     <>
       <NavBar tripId={tripId} />
       <main className="p-8 space-y-8">
-        <h1 className="text-3xl font-bold">✈️ Reservations</h1>
-
+        <h1 className="text-3xl font-bold mb-4">✈️ Reservations Tracker</h1>
+<p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
+  Never lose a confirmation again.  
+  Store your flights, hotels, transports, and tickets — always accessible, even on the go.
+</p>
         <section className="bg-white p-6 rounded-lg shadow-md">
           <table className="w-full border border-gray-300 text-sm">
-            <thead className="bg-[#0c454a] text-white">
+            <thead className="bg-[#001e42] text-white">
               <tr>
                 <th className="p-2">Type</th>
                 <th className="p-2">Provider</th>
@@ -389,14 +396,14 @@ export default function ReservationsPage({ params }: Props) {
           <div className="mt-6 flex flex-col gap-4">
             <button
               onClick={addRow}
-              className="w-full bg-[#0c454a] text-white py-2 rounded-lg"
+              className="w-full bg-[#001e42] hover:bg-[#DCC9A3] text-white py-2 rounded-lg"
             >
               + Add Reservation
             </button>
             <button
               onClick={saveReservations}
               disabled={saving}
-              className="w-full bg-[#0c454a] text-white py-2 rounded-lg"
+              className="w-full bg-[#001e42] hover:bg-[#DCC9A3] text-white py-2 rounded-lg"
             >
               {saving ? "Saving..." : "Save Reservations"}
             </button>

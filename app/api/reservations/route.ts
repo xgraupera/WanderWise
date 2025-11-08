@@ -41,7 +41,7 @@ export async function GET(req: Request) {
         type: cat,
         provider: "",
         bookingDate: today,
-        date: today,
+        date: null,
         cancellationDate: null,
         amount: 0,
         confirmed: false,

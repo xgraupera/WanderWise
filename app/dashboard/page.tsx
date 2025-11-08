@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
+import FooterBar from "@/components/FooterBar";
+
+
 
 export default function DashboardPage() {
   const [trips, setTrips] = useState<any[]>([]);
@@ -14,6 +17,7 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null); // Nuevo estado para mostrar errores
 
   useEffect(() => {
     fetchTrips();
@@ -38,23 +42,37 @@ export default function DashboardPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    // ✅ Validación de fechas antes de enviar
+    if (form.startDate && form.endDate && new Date(form.endDate) < new Date(form.startDate)) {
+      setError("End date cannot be earlier than the start date.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/trips", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          startDate: form.startDate,
+          endDate: form.endDate,
+          travelers: Number(form.travelers),
+        }),
       });
+
       if (res.ok) {
         setForm({ name: "", startDate: "", endDate: "", travelers: "" });
         await fetchTrips();
       } else {
         const err = await res.json();
-        alert("Error creating trip: " + (err?.error || res.statusText));
+        setError("Error creating trip: " + (err?.error || res.statusText));
       }
     } catch (err) {
       console.error("Create trip error:", err);
-      alert("Network error creating trip");
+      setError("Network error creating trip");
     } finally {
       setSubmitting(false);
     }
@@ -65,7 +83,6 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`/api/trips/${id}`, { method: "DELETE" });
       if (res.ok) {
-        // actualizar UI localmente
         setTrips((prev) => prev.filter((t) => t.id !== id));
       } else {
         const err = await res.json();
@@ -81,15 +98,19 @@ export default function DashboardPage() {
     <>
       <NavBar />
       <main className="p-8 space-y-8 bg-gray-50 min-h-screen">
-        {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-[#0c454a]">Your Dashboard</h1>
+          <h1 className="text-3xl font-bold mb-4 text-[#001e42]">Your Dashboard</h1>
         </div>
+
+        <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
+          Every great adventure begins here.  
+          Create a new trip or revisit your ongoing journeys.  
+          Each destination is a story — and WanderWisely helps you plan it with both heart and wisdom.
+        </p>
 
         {/* Lista de viajes */}
         <section>
-          <h2 className="text-xl font-semibold mb-3 text-[#0c454a]">Your Trips</h2>
-
+          <h2 className="text-xl font-semibold mb-3 text-[#001e42]">Your Trips</h2>
           {loading ? (
             <p className="text-gray-500">Loading trips...</p>
           ) : trips.length === 0 ? (
@@ -102,17 +123,15 @@ export default function DashboardPage() {
                   className="relative bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition group"
                 >
                   <Link href={`/dashboard/trip/${trip.id}/main`} className="block">
-                    <h3 className="text-lg font-semibold text-[#0c454a]">{trip.name}</h3>
+                    <h3 className="text-lg font-semibold text-[#001e42]">{trip.name}</h3>
                     <p className="text-sm text-gray-600">
                       {new Date(trip.startDate).toLocaleDateString()} →{" "}
                       {new Date(trip.endDate).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {trip.durationDays} Days | Travelers:{" "}
-                      {trip.travelers}
+                      {trip.durationDays} Days | Travelers: {trip.travelers}
                     </p>
                   </Link>
-
                   <button
                     onClick={() => handleDelete(trip.id)}
                     className="absolute top-3 right-3 text-red-500 hover:text-red-700 transition opacity-80 group-hover:opacity-100"
@@ -126,9 +145,10 @@ export default function DashboardPage() {
           )}
         </section>
 
-        {/* Formulario para crear un viaje */}
+        {/* Crear un nuevo viaje */}
         <section className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-[#0c454a]">Create a New Trip</h2>
+          <h2 className="text-xl font-semibold mb-4 text-[#001e42]">Create a New Trip</h2>
+
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
@@ -138,8 +158,6 @@ export default function DashboardPage() {
               required
               className="border p-2 rounded-lg"
             />
-
-            {/* Start Date con etiqueta visible */}
             <div className="relative">
               <label className="absolute left-3 top-1 text-xs text-gray-500">Start Date</label>
               <input
@@ -150,8 +168,6 @@ export default function DashboardPage() {
                 className="border p-2 rounded-lg pt-5 w-full"
               />
             </div>
-
-            {/* End Date con etiqueta visible */}
             <div className="relative">
               <label className="absolute left-3 top-1 text-xs text-gray-500">End Date</label>
               <input
@@ -162,7 +178,6 @@ export default function DashboardPage() {
                 className="border p-2 rounded-lg pt-5 w-full"
               />
             </div>
-
             <input
               type="number"
               placeholder="Number of Travelers"
@@ -171,17 +186,24 @@ export default function DashboardPage() {
               required
               className="border p-2 rounded-lg"
             />
-            
             <button
               type="submit"
               disabled={submitting}
-              className="bg-[#0c454a] text-white py-2 rounded-lg hover:bg-[#13636a] transition sm:col-span-2"
+              className="bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition sm:col-span-2"
             >
               {submitting ? "Creating..." : "Create Trip"}
             </button>
           </form>
+
+          {/* Mostrar error si existe */}
+          {error && (
+            <p className="text-red-600 text-sm mt-3 font-medium text-center sm:col-span-2">
+              ⚠️ {error}
+            </p>
+          )}
         </section>
       </main>
+    
     </>
   );
 }
