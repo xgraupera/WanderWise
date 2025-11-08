@@ -51,7 +51,7 @@ function ResetPasswordForm() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
       <div className="bg-white shadow-md rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-4 text-center text-[#0c454a]">
+        <h1 className="text-3xl font-bold mb-4 text-center">
           🔒 Reset Password
         </h1>
         <p className="text-gray-600 text-center mb-6 text-sm">
@@ -78,7 +78,7 @@ function ResetPasswordForm() {
 
           <button
             type="submit"
-            className="bg-[#0c454a] hover:bg-[#13636a] text-white py-2 rounded-lg font-semibold transition-all duration-200"
+            className="bg-[#001e42] hover:bg-[#DCC9A3] text-white py-2 rounded-lg font-semibold transition-all duration-200"
           >
             {status === "Processing..." ? "Processing..." : "Reset Password"}
           </button>
