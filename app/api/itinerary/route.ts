@@ -29,6 +29,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { tripId, itinerary } = body;
 
+    const tripIdInt = Number(tripId);
+if (isNaN(tripIdInt)) {
+  return NextResponse.json({ error: "Invalid tripId" }, { status: 400 });
+}
+
+
     if (!tripId || !Array.isArray(itinerary)) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
@@ -48,8 +54,8 @@ export async function POST(req: Request) {
 
       const saved = await prisma.itinerary.upsert({
         where: {
-          tripId_day: { tripId: Number(tripId), day: dayNum },
-        },
+  tripId_day: { tripId: tripIdInt, day: dayNum },
+},
         update: {
           // solo incluir date si viene (evita pasar undefined/null explícito)
            date: i.date ? new Date(i.date) : new Date(),
@@ -63,7 +69,7 @@ export async function POST(req: Request) {
   city: i.city || "",
   activity: i.activity || "",
   notes: i.notes || "",
-  trip: { connect: { id: tripId } },
+  trip: { connect: { id: tripIdInt } },
 },
       });
 
@@ -73,12 +79,12 @@ export async function POST(req: Request) {
     // 🔻 ELIMINAR cualquier día que exista en BD pero NO venga en el payload
     // Esto hace persistente la eliminación hecha por el usuario en el frontend.
     // Si providedDays está vacío, eliminamos todas las filas (el usuario borró todo).
-    await prisma.itinerary.deleteMany({
-      where: {
-        tripId: Number(tripId),
-        day: providedDays.length ? { notIn: providedDays } : undefined,
-      },
-    });
+ await prisma.itinerary.deleteMany({
+  where: {
+    tripId: tripIdInt,
+    day: providedDays.length ? { notIn: providedDays } : undefined,
+  },
+});
 
     return NextResponse.json({ ok: true, saved: results });
   } catch (error: unknown) {

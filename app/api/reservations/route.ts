@@ -49,6 +49,10 @@ export async function GET(req: Request) {
         tripId: tripIdNum,
       }));
 
+
+
+
+      
       await prisma.reservation.createMany({ data });
 
       const created = await prisma.reservation.findMany({
