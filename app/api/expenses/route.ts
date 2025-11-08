@@ -66,7 +66,7 @@ export async function POST(req: Request) {
             description: e.description || "",
             amount,
             paidBy: e.paidBy || "",
-            doNotSplit,
+            doNotSplit: e.doNotSplit ?? false,
             amountPerTraveler,
           },
         });
