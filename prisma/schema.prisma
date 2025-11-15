@@ -26,6 +26,10 @@ model Trip {
   endDate      DateTime
   durationDays Int
   travelers    Int           @default(1)
+  latitude      Float?    // Nueva propiedad
+  longitude     Float?    // Nueva propiedad
+  description   String?      // nueva columna
+  cities        Json?   
   userId       Int
   user         User          @relation(fields: [userId], references: [id])
   budgets      Budget[]
@@ -75,6 +79,8 @@ model Reservation {
   tripId      Int
   trip        Trip     @relation(fields: [tripId], references: [id])
   createdAt   DateTime @default(now())
+  category    String?
+  reminders Reminder[]
 }
 
 model Checklist {
@@ -105,4 +111,14 @@ model Expense {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Trip      Trip     @relation(fields: [tripId], references: [id])
+}
+
+model Reminder {
+  id           Int      @id @default(autoincrement())
+  reservationId Int
+  email        String
+  sendAt       DateTime
+  sent         Boolean  @default(false)
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
 }

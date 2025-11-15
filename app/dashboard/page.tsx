@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import FooterBar from "@/components/FooterBar";
+import dynamic from "next/dynamic";
+import "leaflet/dist/leaflet.css";
+
+
+
+const MapComponent = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+});
+
+
+
+
 
 
 
@@ -14,11 +26,82 @@ export default function DashboardPage() {
     startDate: "",
     endDate: "",
     travelers: "",
+    latitude: "",
+    longitude: "",
   });
+  const [markerIcon, setMarkerIcon] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para mostrar errores
+  const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
+  const typingTimer = useRef<NodeJS.Timeout | null>(null);
+
+
+  // 🧭 Debounce estable
+  function debounce(callback: Function, delay = 400) {
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(() => callback(), delay);
+  }
+
+  // 🌍 Autocompletado de ciudades
+  async function fetchCitySuggestions(query: string) {
+    if (!query || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/cities?q=${encodeURIComponent(query)}`);
+      const json = await res.json();
+
+      if (!res.ok || json.error) {
+        console.error("API error:", json.error || res.statusText);
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      setSuggestions(json.data || []);
+      setShowSuggestions(true);
+    } catch (err) {
+      console.error("Error fetching cities:", err);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }
+
+
+
+  function handleCitySelect(city: any) {
+  setForm({
+    ...form,
+    name: `${city.name}, ${city.country}`,
+    latitude: city.latitude,
+    longitude: city.longitude,
+  });
+  setShowSuggestions(false);
+}
+
+const [weatherData, setWeatherData] = useState<Record<number, any>>({}); // key = trip.id
+
+async function fetchWeather(lat: number, lon: number, tripId: number) {
+  try {
+    const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_KEY; // Tu API key de OpenWeatherMap
+    const res = await fetch(
+  `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
+);
+    if (!res.ok) throw new Error("Weather fetch failed");
+    const data = await res.json();
+    setWeatherData((prev) => ({ ...prev, [tripId]: data }));
+  } catch (err) {
+    console.error("Error fetching weather:", err);
+  }
+}
+
+  // 🚀 Cargar viajes al iniciar
   useEffect(() => {
     fetchTrips();
   }, []);
@@ -29,7 +112,17 @@ export default function DashboardPage() {
       const res = await fetch("/api/trips");
       if (res.ok) {
         const data = await res.json();
-        setTrips(data);
+        setTrips(
+  data.sort((a: any, b: any) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+);
+
+        // ✅ Aquí sí existe `data`, llamamos a fetchWeather
+      data.forEach((trip: any) => {
+        if (trip.latitude && trip.longitude) {
+          fetchWeather(trip.latitude, trip.longitude, trip.id);
+        }
+      });
+    
       } else {
         console.error("Failed to fetch trips");
       }
@@ -40,11 +133,11 @@ export default function DashboardPage() {
     }
   }
 
+  // ✈️ Crear nuevo viaje
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    // ✅ Validación de fechas antes de enviar
     if (form.startDate && form.endDate && new Date(form.endDate) < new Date(form.startDate)) {
       setError("End date cannot be earlier than the start date.");
       return;
@@ -60,11 +153,13 @@ export default function DashboardPage() {
           startDate: form.startDate,
           endDate: form.endDate,
           travelers: Number(form.travelers),
+          latitude: parseFloat(form.latitude),
+          longitude: parseFloat(form.longitude),
         }),
       });
 
       if (res.ok) {
-        setForm({ name: "", startDate: "", endDate: "", travelers: "" });
+        setForm({ name: "", startDate: "", endDate: "", travelers: "", latitude: "", longitude: "" });
         await fetchTrips();
       } else {
         const err = await res.json();
@@ -96,16 +191,15 @@ export default function DashboardPage() {
 
   return (
     <>
+    <div className="z-[9999]">
       <NavBar />
-      <main className="p-8 space-y-10 bg-gray-50">
-        
-          <h1 className="text-3xl font-bold mb-4">Your Dashboard</h1>
-      
+      </div>
+      <main className="p-8 space-y-10 bg-gray-50 pt-20">
+        <h1 className="text-3xl font-bold mb-4">Your Dashboard</h1>
 
         <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
-          Every great adventure begins here.  
-          Create a new trip or revisit your ongoing journeys.  
-          Each destination is a story — and WanderWisely helps you plan it with both heart and wisdom.
+          Every great adventure begins here.
+          Create a new trip or revisit your ongoing journeys.
         </p>
 
         {/* Lista de viajes */}
@@ -120,18 +214,43 @@ export default function DashboardPage() {
               {trips.map((trip) => (
                 <div
                   key={trip.id}
-                  className="relative bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition group"
+                  className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition relative
+                  "
                 >
-                  <Link href={`/dashboard/trip/${trip.id}/main`} className="block">
-                    <h3 className="text-lg font-semibold text-[#001e42]">{trip.name}</h3>
-                    <p className="text-sm text-gray-600">
-                      {new Date(trip.startDate).toLocaleDateString()} →{" "}
-                      {new Date(trip.endDate).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {trip.durationDays} Days | Travelers: {trip.travelers}
-                    </p>
-                  </Link>
+     <Link href={`/dashboard/trip/${trip.id}/main`} className="block">
+  <h3 className="text-lg font-semibold text-[#001e42]">{trip.name}</h3>
+
+  {/* Fechas a la izquierda, clima a la derecha en dos filas */}
+  <div className="flex justify-between items-start text-sm text-gray-600">
+    {/* Fechas */}
+    <div>
+      <p>
+        {new Date(trip.startDate).toLocaleDateString()} →{" "}
+        {new Date(trip.endDate).toLocaleDateString()}
+      </p>
+      <p>
+        {trip.durationDays} Days | Travelers: {trip.travelers}
+      </p>
+    </div>
+
+    {/* Clima */}
+    <div className="text-right">
+      {weatherData[trip.id] && weatherData[trip.id].main && weatherData[trip.id].weather ? (
+        <>
+          <p className="text-gray-700">
+            Weather info: {Math.round(weatherData[trip.id].main.temp)}°C
+          </p>
+          <p className="capitalize text-gray-700">
+            {weatherData[trip.id].weather[0].description}
+          </p>
+        </>
+      ) : (
+        <p className="text-gray-400 italic">Weather not available</p>
+      )}
+    </div>
+  </div>
+</Link>
+
                   <button
                     onClick={() => handleDelete(trip.id)}
                     className="absolute top-3 right-3 text-red-500 hover:text-red-700 transition opacity-80 group-hover:opacity-100"
@@ -145,57 +264,131 @@ export default function DashboardPage() {
           )}
         </section>
 
+        {/* 🌍 MAPA DE VIAJES */}
+        
+        
+{/* 🌍 MAPA GENERAL DE VIAJES */}
+ <section className="pt-4">
+<h2 className="text-xl font-semibold mb-3 text-[#001e42]">Trips Map</h2>
+
+  
+
+  <div className="w-full h-[400px] rounded-xl overflow-hidden shadow-md relative">
+    <MapComponent trips={trips} />
+  </div>
+
+</section>
+
+        
+
         {/* Crear un nuevo viaje */}
         <section className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4 text-[#001e42]">Create a New Trip</h2>
 
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Trip Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              required
-              className="border p-2 rounded-lg"
-            />
-            <div className="relative">
-              <label className="absolute left-3 top-1 text-xs text-gray-500">Start Date</label>
-              <input
-                type="date"
-                value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                required
-                className="border p-2 rounded-lg pt-5 w-full"
-              />
-            </div>
-            <div className="relative">
-              <label className="absolute left-3 top-1 text-xs text-gray-500">End Date</label>
-              <input
-                type="date"
-                value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                required
-                className="border p-2 rounded-lg pt-5 w-full"
-              />
-            </div>
-            <input
-              type="number"
-              placeholder="Number of Travelers"
-              value={form.travelers}
-              onChange={(e) => setForm({ ...form, travelers: e.target.value })}
-              required
-              className="border p-2 rounded-lg"
-            />
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition sm:col-span-2"
-            >
-              {submitting ? "Creating..." : "Create Trip"}
-            </button>
-          </form>
 
-          {/* Mostrar error si existe */}
+  <div className="flex flex-col">
+    <label className="mb-1">Trip Name</label>
+    <div className="relative">
+      <input
+        type="text"
+        placeholder="Rome"
+        value={form.name}
+        onChange={(e) => {
+          setForm({ ...form, name: e.target.value });
+          debounce(() => fetchCitySuggestions(e.target.value));
+        }}
+        onFocus={() => form.name && setShowSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+        required
+        className="border p-2 border-gray-200  rounded-lg w-full"
+      />
+
+      {showSuggestions && suggestions.length > 0 && (
+        <ul className="absolute z-10 bg-white border rounded-lg shadow-md w-full mt-1 max-h-40 overflow-y-auto">
+          {suggestions.map((s, i) => (
+            <li
+              key={i}
+              onClick={() => handleCitySelect(s)}
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+            >
+              {s.name}, {s.country}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+
+  <div className="flex flex-col">
+    <label className="mb-1">Number of Travelers</label>
+    <input
+      type="number"
+      placeholder="2"
+      value={form.travelers}
+      onChange={(e) => setForm({ ...form, travelers: e.target.value })}
+      required
+      className="border p-2 border-gray-200 rounded-lg w-full"
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <label className="mb-1">Start Date</label>
+    <input
+      type="date"
+      value={form.startDate}
+      onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+      required
+      className="border p-2 border-gray-200 rounded-lg w-full"
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <label className="mb-1">End Date</label>
+    <input
+      type="date"
+      value={form.endDate}
+      onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+      required
+      className="border p-2 border-gray-200 rounded-lg w-full"
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <label className="mb-1">Latitude (Optional)</label>
+    <input
+      type="number"
+      step="any"
+      placeholder="41,89"
+      value={form.latitude || ""}
+      onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+      className="border p-2 border-gray-200 rounded-lg w-full"
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <label className="mb-1">Longitude (Optional)</label>
+    <input
+      type="number"
+      step="any"
+      placeholder="12,48"
+      value={form.longitude || ""}
+      onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+      className="border p-2 border-gray-200 rounded-lg w-full"
+    />
+  </div>
+
+  <button
+    type="submit"
+    disabled={submitting}
+    className="bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition sm:col-span-2"
+  >
+    {submitting ? "Creating..." : "Create Trip"}
+  </button>
+
+</form>
+
+
           {error && (
             <p className="text-red-600 text-sm mt-3 font-medium text-center sm:col-span-2">
               ⚠️ {error}
@@ -203,7 +396,7 @@ export default function DashboardPage() {
           )}
         </section>
       </main>
-    
+      
     </>
   );
 }

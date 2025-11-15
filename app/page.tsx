@@ -8,7 +8,6 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-
 export default function HomePage() {
   const [mode, setMode] = useState<"login" | "register" | "recover">("login");
   const [email, setEmail] = useState("");
@@ -102,37 +101,95 @@ export default function HomePage() {
 
     
 
-      <main className="flex flex-col bg-gradient-to-b from-white to-[#f9f9f9] ">
+      <main className="flex flex-col bg-gradient-to-b from-white to-[#f9f9f9]">
+
         {/* 🏞️ HERO SECTION */}
         <section className="flex flex-col items-center justify-center flex-grow bg-[#001e42] text-center px-6 py-20 md:px-12">
-           <Image
-    src="/icon.png"            // o el nombre del archivo real
-    alt="WanderWisely logo"
-    width={120}
-    height={120}
-    className="mb-6"
-    priority
-  />
+          <Image
+            src="/icon.png"
+            alt="WanderWisely logo"
+            width={120}
+            height={120}
+            className="mb-6"
+            priority
+          />
           <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4 tracking-tight">
             WanderWisely
           </h1>
-          <p className="text-4xl font-bold mb-6 leading-tight text-[#025fd1]">
+          <p className="text-4xl font-bold mb-6 leading-tight text-white">
             Wander Smart. Travel Wisely
           </p>
           <p className="text-lg md:text-xl text-white max-w-2xl mb-10 leading-relaxed">
             The intelligent way to plan your adventures. <br />
             From dream to destination — effortless, organized, and inspiring.
           </p>
-</section>
-          <section className="flex flex-col items-center justify-center flex-grow text-center px-6 py-20 md:px-12">
+        </section>
 
-          {/* LOGIN / REGISTER / RECOVER CARD */}
+        {/* 🧩 FEATURES */}
+        <section className="py-10 px-6 text-center ">
+          <h2 className="text-3xl font-bold text-[#001e42] mb-10">Plan Your Trips Without Chaos</h2>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="bg-white shadow-md p-8 rounded-xl hover:shadow-xl transition">
+              <h3 className="font-semibold text-xl mb-2">Organized Itineraries</h3>
+              <p className="text-gray-600">Create clean day-by-day itineraries without messy spreadsheets.</p>
+            </div>
+
+            <div className="bg-white shadow-md p-8 rounded-xl hover:shadow-xl transition">
+              <h3 className="font-semibold text-xl mb-2">Smart Budgeting</h3>
+              <p className="text-gray-600">Track expenses and plan budgets effortlessly for your trip.</p>
+            </div>
+
+            <div className="bg-white shadow-md p-8 rounded-xl hover:shadow-xl transition">
+              <h3 className="font-semibold text-xl mb-2">Reservations in One Place</h3>
+              <p className="text-gray-600">Store all bookings: flights, hotels, cars, activities and more.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 🖼️ MOCKUP */}
+        <section className="py-16 text-center">
+          <h2 className="text-3xl font-bold text-[#001e42] mb-10">See Your Dashboard</h2>
+          <div className="max-w-4xl mx-auto">
+            <Image
+              src="/dashboard.png"
+              alt="Dashboard Mockup"
+              width={1000}
+              height={600}
+              className="rounded-xl shadow-lg"
+            />
+          </div>
+        </section>
+
+        {/* 📝 HOW IT WORKS */}
+        <section className="py-16 px-6 text-center">
+          <h2 className="text-3xl font-bold text-[#001e42] mb-10">How It Works</h2>
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="bg-white shadow-md p-8 rounded-xl hover:shadow-xl transition">
+              <h3 className="font-semibold text-xl mb-2">1. Create Your Trip</h3>
+              <p className="text-gray-600">Add destinations, dates, and activities for a clean plan.</p>
+            </div>
+            <div className="bg-white shadow-md p-8 rounded-xl hover:shadow-xl transition">
+              <h3 className="font-semibold text-xl mb-2">2. Track Expenses</h3>
+              <p className="text-gray-600">Manage budgets and expenses in one simple place.</p>
+            </div>
+            <div className="bg-white shadow-md p-8 rounded-xl hover:shadow-xl transition">
+              <h3 className="font-semibold text-xl mb-2">3. Enjoy Your Trip</h3>
+              <p className="text-gray-600">Access your plan anytime, anywhere — stress-free travel.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 🔑 LOGIN / REGISTER / RECOVER CARD */}
+        <section className="flex flex-col items-center justify-center flex-grow text-center px-6 py-10 md:px-12">
+          <h3 className="text-3xl font-bold text-[#001e42] mb-10">Start Planning</h3>
+
           <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
             <h2 className="text-2xl font-semibold mb-6 text-center text-[#001e42]">
               {mode === "login"
                 ? "Sign in to your account"
                 : mode === "register"
-                ? "Create your WanderWisely account"
+                ? "Create your account"
                 : "Recover your password"}
             </h2>
 
@@ -142,7 +199,7 @@ export default function HomePage() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2  outline-none"
+                className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 outline-none"
                 required
               />
 
@@ -163,7 +220,7 @@ export default function HomePage() {
                   placeholder="Confirm Password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2  outline-none"
+                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 outline-none"
                   required
                 />
               )}
@@ -189,7 +246,6 @@ export default function HomePage() {
               </p>
             )}
 
-            {/* LINKS DE CAMBIO */}
             <div className="mt-6 text-center text-sm text-gray-600 space-y-2">
               {mode === "login" && (
                 <>
@@ -239,8 +295,8 @@ export default function HomePage() {
           </div>
         </section>
 
-       
       </main>
+
     </>
   );
 }

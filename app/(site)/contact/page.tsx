@@ -27,7 +27,7 @@ export default function ContactPage() {
   return (
     <>
       <NavBar />
-      <main className="p-8 bg-gray-50 text-center space-y-8">
+      <main className="p-8 bg-gray-50 text-center space-y-8 pt-20">
         <h1 className="text-4xl font-bold">📬 Contact Us</h1>
 
         <p className="text-gray-700 max-w-2xl mx-auto leading-relaxed">
@@ -36,14 +36,14 @@ export default function ContactPage() {
         </p>
 
 <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded-2xl shadow-md space-y-4 text-left">
-  <label className="block text-sm text-gray-600">Your Name</label>
-  <input name="name" className="w-full border p-2 rounded-lg" required placeholder="John Traveler"/>
+  <label>Your Name</label>
+  <input name="name" className="w-full border  border-gray-200 p-2 rounded-lg" required placeholder="John Traveler"/>
 
-  <label className="block text-sm text-gray-600">Email</label>
-  <input name="email" type="email" className="w-full border p-2 rounded-lg" required placeholder="you@example.com" />
+  <label >Email</label>
+  <input name="email" type="email" className="w-full border border-gray-200  p-2 rounded-lg" required placeholder="you@example.com" />
 
-  <label className="block text-sm text-gray-600">Message</label>
-  <textarea name="message" className="w-full border p-2 rounded-lg h-32" required placeholder="Write your message..."/>
+  <label >Message</label>
+  <textarea name="message" className="w-full border border-gray-200  p-2 rounded-lg h-32" required placeholder="Write your message..."/>
 
   <button className="w-full bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition">
     Send Message

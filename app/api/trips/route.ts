@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   });
 
   const data = await request.json();
-  const { name, startDate, endDate, travelers } = data;
+  const { name, startDate, endDate, travelers, latitude, longitude } = data;
 
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -44,6 +44,8 @@ export async function POST(request: Request) {
       endDate: end,
       travelers: parseInt(travelers),
       durationDays,
+       latitude,
+    longitude,
       userId: user!.id,
     },
   });

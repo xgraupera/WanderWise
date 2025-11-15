@@ -6,12 +6,12 @@ const prisma = new PrismaClient();
 
 // 🧾 Default checklist (si no hay nada guardado)
 const defaultChecklist = [
-  { category: "Documents", task: "ID and Passport", notes: "" },
-  { category: "Documents", task: "Visa", notes: "" },
-  { category: "Documents", task: "Fotocopy of Passport and Visa", notes: "" },
-  { category: "Documents", task: "International Driver's Licence", notes: "" },
-  { category: "Documents", task: "Hotel and Transport Reservations", notes: "" },
-  { category: "Money", task: "International Credit/Debit Card", notes: "" },
+  { category: "Documentation", task: "ID and Passport", notes: "" },
+  { category: "Documentation", task: "Visa", notes: "" },
+  { category: "Documentation", task: "Fotocopy of Passport and Visa", notes: "" },
+  { category: "Documentation", task: "International Driver's Licence", notes: "" },
+  { category: "Documentation", task: "Hotel and Transport Reservations", notes: "" },
+  { category: "Others", task: "International Credit/Debit Card", notes: "" },
   { category: "Health", task: "Basic First Aid Kit", notes: "" },
   { category: "Health", task: "Vaccinations", notes: "" },
   { category: "Health", task: "Health Insurance", notes: "" },

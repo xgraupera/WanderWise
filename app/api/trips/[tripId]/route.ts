@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+
+
+interface CityBody {
+  name: string;
+  country?: string;
+  latitude?: string | number | null;
+  longitude?: string | number | null;
+}
+
 
 // 🟢 GET: obtener datos del viaje + presupuestos + gastos
 export async function GET(
@@ -23,6 +33,10 @@ export async function GET(
         durationDays: true,
         travelers: true,
         createdAt: true,
+        latitude: true,
+        longitude: true,
+        description: true,
+    cities: true,
       },
     });
 
@@ -48,16 +62,21 @@ export async function GET(
     );
 
     // ✅ Devolvemos estructura compatible con la página Main
-    return NextResponse.json({
-      id: trip.id,
-      name: trip.name,
-      startDate: trip.startDate,
-      endDate: trip.endDate,
-      durationDays: trip.durationDays,
-      travelers: Number(trip.travelers) || 1,
-      totalBudget,
-      spentSoFar,
-    });
+return NextResponse.json({
+  id: trip.id,
+  name: trip.name,
+  startDate: trip.startDate,
+  endDate: trip.endDate,
+  durationDays: trip.durationDays,
+  travelers: Number(trip.travelers) || 1,
+  totalBudget,
+  spentSoFar,
+  latitude: trip.latitude,
+  longitude: trip.longitude,
+  description: trip.description || "",
+  cities: Array.isArray(trip.cities) ? trip.cities : [],
+});
+
   } catch (error) {
     console.error("GET /api/trips/[tripId] error:", error);
     return NextResponse.json(
@@ -67,6 +86,7 @@ export async function GET(
   }
 }
 
+// 🔵 PUT: actualizar datos del viaje
 // 🔵 PUT: actualizar datos del viaje
 export async function PUT(
   req: Request,
@@ -79,13 +99,24 @@ export async function PUT(
 
     const durationDays = parseInt(body.durationDays, 10);
     const travelers = parseInt(body.travelers, 10);
+    const latitude = parseFloat(body.latitude);
+    const longitude = parseFloat(body.longitude);
 
     if (isNaN(durationDays) || isNaN(travelers)) {
-      return NextResponse.json(
-        { error: "Invalid number values" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid number values" }, { status: 400 });
     }
+
+    const description = typeof body.description === "string" ? body.description : "";
+
+    // ✅ Convertimos cities a un JSON compatible con Prisma
+    const citiesData = Array.isArray(body.cities)
+      ? (body.cities as CityBody[]).map((c) => ({
+          name: c.name || (c as any),
+          country: c.country || "",
+          latitude: c.latitude !== undefined ? parseFloat(c.latitude as any) : undefined,
+          longitude: c.longitude !== undefined ? parseFloat(c.longitude as any) : undefined,
+        }))
+      : [];
 
     const updated = await prisma.trip.update({
       where: { id },
@@ -95,10 +126,15 @@ export async function PUT(
         endDate: new Date(body.endDate),
         durationDays,
         travelers,
+        latitude: isNaN(latitude) ? null : latitude,
+        longitude: isNaN(longitude) ? null : longitude,
+        description,
+        // Aquí se hace la conversión explícita a JSON
+        cities: citiesData as unknown as Prisma.InputJsonValue,
       },
     });
 
-    // 🔹 Recalcular presupuesto y gastos después de actualizar
+    // ... resto del código (recalcular presupuestos y gastos)
     const budgets = await prisma.budget.findMany({
       where: { tripId: id },
       select: { budget: true },
@@ -109,25 +145,22 @@ export async function PUT(
       where: { tripId: id },
       select: { amountPerTraveler: true },
     });
-    const spentSoFar = expenses.reduce(
-      (sum, e) => sum + (e.amountPerTraveler || 0),
-      0
-    );
+    const spentSoFar = expenses.reduce((sum, e) => sum + (e.amountPerTraveler || 0), 0);
 
     return NextResponse.json({
       message: "Trip updated successfully",
       updated,
       totalBudget,
       spentSoFar,
+      latitude: updated.latitude,
+      longitude: updated.longitude,
     });
   } catch (error) {
     console.error("PUT /api/trips/[tripId] error:", error);
-    return NextResponse.json(
-      { error: "Failed to update trip" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update trip" }, { status: 500 });
   }
 }
+
 
 // 🔴 DELETE: eliminar un viaje y sus datos asociados
 export async function DELETE(

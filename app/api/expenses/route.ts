@@ -1,3 +1,4 @@
+// app/api/expenses/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
@@ -24,17 +25,15 @@ export async function GET(req: Request) {
   }
 }
 
-// 🟢 POST — Guardar todos los gastos
+// 🟢 POST — Crear o actualizar gastos, sin borrar nada
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { tripId, userId, expenses } = body;
+    const { tripId, userId, expenses } = await req.json();
 
     if (!tripId || !userId || !Array.isArray(expenses)) {
       return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
     }
 
-    // ✅ Obtener número de viajeros reales
     const trip = await prisma.trip.findUnique({
       where: { id: Number(tripId) },
       select: { travelers: true },
@@ -42,41 +41,51 @@ export async function POST(req: Request) {
 
     const numTravelers = Number(trip?.travelers) || 1;
 
-    // ✅ Borrar gastos previos
-    await prisma.expense.deleteMany({
-      where: { tripId: Number(tripId), userId },
-    });
-
-    // ✅ Crear nuevos
-    const createdExpenses = await prisma.$transaction(
-      expenses.map((e: any) => {
+    // 🔹 Crear o actualizar gastos
+    await Promise.all(
+      expenses.map((e) => {
         const amount = Number(e.amount) || 0;
         const doNotSplit = Boolean(e.doNotSplit);
         const amountPerTraveler = doNotSplit
           ? amount
           : amount / (numTravelers > 0 ? numTravelers : 1);
 
-        return prisma.expense.create({
-          data: {
-            tripId: Number(tripId),
-            userId,
-            date: e.date ? new Date(e.date) : new Date(),
-            place: e.place || "",
-            category: e.category || "Others",
-            description: e.description || "",
-            amount,
-            paidBy: e.paidBy || "",
-            doNotSplit: e.doNotSplit ?? false,
-            amountPerTraveler,
-          },
-        });
+        if (e.id) {
+          // Actualizar gasto existente
+          return prisma.expense.update({
+            where: { id: e.id },
+            data: {
+              date: e.date ? new Date(e.date) : new Date(),
+              place: e.place || "",
+              category: e.category || "Others",
+              description: e.description || "",
+              amount,
+              paidBy: e.paidBy || "",
+              doNotSplit,
+              amountPerTraveler,
+            },
+          });
+        } else {
+          // Crear nuevo gasto
+          return prisma.expense.create({
+            data: {
+              tripId: Number(tripId),
+              userId,
+              date: e.date ? new Date(e.date) : new Date(),
+              place: e.place || "",
+              category: e.category || "Others",
+              description: e.description || "",
+              amount,
+              paidBy: e.paidBy || "",
+              doNotSplit,
+              amountPerTraveler,
+            },
+          });
+        }
       })
     );
 
-    return NextResponse.json(
-      { ok: true, count: createdExpenses.length, expenses: createdExpenses },
-      { status: 201 }
-    );
+    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("POST /api/expenses error:", error);
     return NextResponse.json({ error: "Failed to save expenses" }, { status: 500 });

@@ -5,11 +5,11 @@ const defaultCategories = [
   "Flights",
   "Accommodation",
   "Internal Transport",
-  "Insurance",
-  "Visa",
+  "Health",
+  "Documentation",
   "Activities",
   "Meals",
-  "SIM",
+  "Technology/SIM",
   "Others",
 ];
 
@@ -43,13 +43,13 @@ export async function GET(req: Request) {
     const expenses = await prisma.expense.groupBy({
       by: ["category"],
       where: { tripId },
-      _sum: { amountPerTraveler: true },
+      _sum: { amount: true },
     });
 
     // 🔹 Actualizar los campos derivados
     const updated = budgets.map((b) => {
       const match = expenses.find((e) => e.category === b.category);
-      const spent = match?._sum.amountPerTraveler || 0;
+      const spent = match?._sum.amount || 0;
       const over = Math.max(0, spent - b.budget);
       const percentage = b.budget ? (spent / b.budget) * 100 : 0;
       return { ...b, spent, overbudget: over, percentage };

@@ -119,7 +119,7 @@ export default function FooterBar({ tripId }: FooterBarProps) {
 
       {/* 📍 Bottom bar */}
        <div className="mt-8 border-t border-gray-700 pt-4 text-center text-sm text-gray-400">
-        <p>Version 1.0</p>
+        <p>Version 1.1</p>
         © {new Date().getFullYear()} WanderWisely Ltd — Plan your next adventure ✈️
       </div>
     </footer>

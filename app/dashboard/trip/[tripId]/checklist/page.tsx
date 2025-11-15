@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import NavBar from "@/components/NavBar";
 import { useParams } from "next/navigation";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface ChecklistItem {
   id?: number;
@@ -10,96 +20,88 @@ interface ChecklistItem {
   task: string;
   notes: string;
   done: boolean;
+  expanded?: boolean;
 }
-
-interface Props {
-  params: { tripId: string };
-}
-
-const defaultChecklist: ChecklistItem[] = [
-  { category: "Documents", task: "ID and Passport", notes: "", done: false },
-  { category: "Documents", task: "Visa", notes: "", done: false },
-  { category: "Documents", task: "Fotocopy of Passport and Visa", notes: "", done: false },
-  { category: "Documents", task: "International Driver's Licence", notes: "", done: false },
-  { category: "Documents", task: "Hotel and Transport Reservations", notes: "", done: false },
-  { category: "Money", task: "International Credit/Debit Card", notes: "", done: false },
-  { category: "Health", task: "Basic First Aid Kit", notes: "", done: false },
-  { category: "Health", task: "Vaccinations", notes: "", done: false },
-  { category: "Health", task: "Health Insurance", notes: "", done: false },
-  { category: "Technology", task: "Charger and Plug Adapters", notes: "", done: false },
-  { category: "Technology", task: "Power Bank", notes: "", done: false },
-  { category: "Technology", task: "International SIM Card/eSIM", notes: "", done: false },
-  { category: "Others", task: "Other items", notes: "", done: false },
-];
-
 
 export default function ChecklistPage() {
-  const params = useParams(); 
-    const tripIdParam = params?.tripId;
-    const tripId = Array.isArray(tripIdParam) ? tripIdParam[0] : tripIdParam;
+  const params = useParams();
+  const tripIdParam = params?.tripId;
+  const tripId = Array.isArray(tripIdParam) ? tripIdParam[0] : tripIdParam;
+
   const [rows, setRows] = useState<ChecklistItem[]>([]);
-  const [newCategory, setNewCategory] = useState("");
-  const [newItemCategory, setNewItemCategory] = useState("");
+  const [budgetCategories, setBudgetCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [editItem, setEditItem] = useState<ChecklistItem | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+   const [showAddModal, setShowAddModal] = useState(false);
+  const [newItem, setNewItem] = useState<ChecklistItem>({
+    category: budgetCategories[0] || "Others",
+    task: "",
+    notes: "",
+    done: false,
+  });
 
-  // 🟢 Cargar datos desde API o defaults
+  // 🟢 Cargar categorías desde Budget
+  useEffect(() => {
+    async function fetchBudgetCategories() {
+      try {
+        const res = await fetch(`/api/budget?tripId=${tripId}`);
+        const data = await res.json();
+        const cats = Array.from(
+  new Set(data.map((b: any) => String(b.category)).filter(Boolean))
+) as string[];
+setBudgetCategories(cats);
+        
+      } catch (err) {
+        console.error("Error loading budget categories:", err);
+      }
+    }
+    fetchBudgetCategories();
+  }, [tripId]);
+
+  // 🟢 Cargar checklist
   useEffect(() => {
     async function fetchChecklist() {
       try {
         const res = await fetch(`/api/checklist?tripId=${tripId}`);
         const data = await res.json();
 
-        if (Array.isArray(data) && data.length > 0) setRows(data);
-        else setRows(defaultChecklist);
+        // Ajustar categorías a las del Budget
+        const adjusted = data.map((item: any) => {
+          const matchCat =
+            budgetCategories.find(
+              (b) =>
+                b.toLowerCase().includes(item.category.toLowerCase()) ||
+                item.category.toLowerCase().includes(b.toLowerCase())
+            ) || "Others";
+          return { ...item, category: matchCat, expanded: false };
+        });
+
+        setRows(adjusted);
       } catch (err) {
         console.error("Error loading checklist:", err);
-        setRows(defaultChecklist);
       } finally {
         setLoading(false);
       }
     }
-    fetchChecklist();
-  }, [tripId]);
+    if (budgetCategories.length > 0) fetchChecklist();
+  }, [tripId, budgetCategories]);
 
-  // 🧩 Agrupar por categoría
-  const grouped = rows.reduce((acc: Record<string, ChecklistItem[]>, item) => {
-    const category = item.category || "Uncategorized";
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(item);
-    return acc;
-  }, {});
+  // 🔹 Filtrar por categoría (solo las que tengan items)
+  const filteredCategories = Array.from(
+    new Set(rows.map((r) => r.category).filter(Boolean))
+  ).filter((cat) =>
+    rows.some((r) => r.category === cat && (r.task || r.notes))
+  );
 
-  const categories = Array.from(new Set(rows.map((r) => r.category).filter(Boolean)));
+  const filteredRows =
+    categoryFilter === "All"
+      ? rows
+      : rows.filter((r) => r.category === categoryFilter);
 
-  // ➕ Añadir nueva categoría (como en Budget)
-  const addCategory = () => {
-    if (!newCategory.trim()) return;
-    const newCat = newCategory.trim();
-    setRows((prev) => [
-      ...prev,
-      { category: newCat, task: "", notes: "", done: false },
-    ]);
-    setNewCategory("");
-  };
-
-  // ➕ Añadir nueva fila seleccionando categoría existente o nueva
-  const addRow = () => {
-    if (!newItemCategory) {
-      alert("Please select or create a category for this new item.");
-      return;
-    }
-    setRows((prev) => [
-      ...prev,
-      { category: newItemCategory, task: "", notes: "", done: false },
-    ]);
-    setNewItemCategory("");
-  };
-
-  // 🗑️ Eliminar fila
-  const deleteRow = (index: number) => setRows(rows.filter((_, i) => i !== index));
-
-  // 💾 Guardar checklist
+  // 🟠 Guardar checklist
   const saveChecklist = async () => {
     setSaving(true);
     try {
@@ -109,22 +111,53 @@ export default function ChecklistPage() {
         body: JSON.stringify({ tripId: Number(tripId), checklist: rows }),
       });
       if (res.ok) alert("✅ Checklist saved!");
-      else {
-        const err = await res.json();
-        alert("❌ Error saving checklist: " + (err.error || "Unknown"));
-      }
-    } catch (error) {
+      else alert("❌ Error saving checklist.");
+    } catch {
       alert("❌ Network or server error");
     } finally {
       setSaving(false);
     }
   };
 
+  // 🟡 Añadir item
+  const addRow = () => {
+    const firstCategory = budgetCategories[0] || "Others";
+    setRows((prev) => [
+      ...prev,
+      {
+        category: firstCategory,
+        task: "",
+        notes: "",
+        done: false,
+        expanded: true,
+      },
+    ]);
+  };
+
+  // 🟣 Actualizar item editado
+   const handleEditSave = () => {
+    if (!editItem) return;
+    setRows((prev) =>
+      prev.map((x, i) =>
+        i === prev.findIndex((r) => r.id === editItem.id || r === editItem)
+          ? { ...editItem }
+          : x
+      )
+    );
+    setShowEditModal(false);
+  };
+    const deleteItem = (index: number) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this item?");
+    if (!confirmDelete) return;
+
+    setRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
   if (loading)
     return (
       <>
         <NavBar tripId={tripId} />
-        <main className="p-8 text-center">
+        <main className="p-8 text-center pt-20">
           <p className="text-lg text-gray-600">Loading trip information...</p>
         </main>
       </>
@@ -133,167 +166,258 @@ export default function ChecklistPage() {
   return (
     <>
       <NavBar tripId={tripId} />
-      <main className="p-8 space-y-10 bg-gray-50 min-h-screen">
-        <h1 className="text-3xl font-bold mb-4">🧾 Travel Checklist</h1>
-<p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
-  Don’t leave anything behind.  
-  Create your packing list, check off what’s ready, and travel knowing you have everything you need.
-</p>
-        <section className="bg-white p-6 rounded-lg shadow-md">
-          {/* Tabla principal */}
-          <table className="w-full border border-gray-300 text-sm">
-            <thead className="bg-[#001e42] text-white">
-              <tr>
-                <th className="p-2 w-16">Done</th>
-                <th className="p-2">Item</th>
-                <th className="p-2 w-40">Category</th>
-                <th className="p-2">Notes</th>
-                <th className="p-2 w-20">Actions</th>
-              </tr>
-            </thead>
+      <main className="p-8 space-y-10 bg-gray-50 pt-20">
+        <h1 className="text-3xl font-bold text-center">🧾 Travel Checklist</h1>
+        <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
+           Don’t leave anything behind. Create your packing list, check off what’s ready, and travel knowing you have everything you need.
+        </p>
 
-            <tbody>
-              {Object.entries(grouped).map(([category, items]) =>
-                items.map((r, i) => {
-                  const globalIndex = rows.findIndex(
-                    (x) =>
-                      x.task === r.task &&
-                      x.category === r.category &&
-                      x.notes === r.notes
-                  );
+        {/* Filtro por categoría */}
+        <div className="flex flex-wrap gap-3 justify-center mb-6">
+          {["All", ...filteredCategories].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={`px-4 py-2 rounded-full border text-sm transition ${
+                categoryFilter === cat
+                  ? "bg-[#001e42] text-white border-[#001e42]"
+                  : "bg-white border-gray-300 text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Botón para añadir item */}
+        <div className="flex justify-center mt-4">
+  <Button
+    onClick={() => setShowAddModal(true)}
+    className="bg-[#001e42] text-white hover:bg-[#DCC9A3]"
+  >
+    <Plus className="mr-2 h-4 w-4" /> Add Item
+  </Button>
+</div>
+
+        {/* Checklist */}
+        <section className="space-y-8 mt-8">
+          {filteredCategories.map((cat) => {
+            const items = filteredRows.filter((r) => r.category === cat);
+            if (items.length === 0) return null;
+            return (
+              <div key={cat} className="space-y-3">
+                <h2 className="text-xl font-semibold mb-3 text-[#001e42]">{cat}</h2>
+                {items.map((item, idx) => {
+                  const globalIndex = rows.findIndex((r) => r === item);
                   return (
-                    <tr key={`${category}-${i}`} className="border-t hover:bg-gray-50">
-                      {/* Done */}
-                      <td className="p-2 text-center">
+                    <div
+                      key={globalIndex}
+                      className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition relative"
+                    >
+                      <div className="flex items-center gap-4">
                         <input
                           type="checkbox"
-                          checked={r.done}
-                          onChange={(e) =>
-                            setRows((prev) =>
-                              prev.map((x, j) =>
-                                j === globalIndex ? { ...x, done: e.target.checked } : x
-                              )
-                            )
-                          }
-                        />
-                      </td>
-
-                      {/* Task */}
-                      <td className="p-2">
-                        <input
-                          className="border p-1 rounded w-full"
-                          value={r.task}
+                          checked={item.done}
                           onChange={(e) =>
                             setRows((prev) =>
                               prev.map((x, j) =>
                                 j === globalIndex
-                                  ? { ...x, task: e.target.value }
+                                  ? { ...x, done: e.target.checked }
                                   : x
                               )
                             )
                           }
+                          className="w-5 h-5 accent-[#025fd1]"
                         />
-                      </td>
-
-                      {/* Category combinada */}
-                      {i === 0 && (
-                        <td
-                          className="p-2 font-semibold text-center"
-                          rowSpan={items.length}
-                        >
-                          {category}
-                        </td>
+                        <div className="flex flex-col gap-1">
+                          <p className="font-bold text-lg">
+                            {item.task || "No Task"}
+                          </p>
+                          
+                        </div>
+                      </div>
+<button
+                    onClick={() => deleteItem(globalIndex)}
+                    className="absolute top-3 right-3.5 text-red-500 hover:text-red-700 transition opacity-80 group-hover:opacity-100"
+                    title="Delete Item"
+                  >
+                    ✕
+                  </button>
+                  <div
+  className={`absolute top-3.5 right-10 transition-all duration-300 ${
+    item.expanded ? "bottom-20" : "bottom-3"
+  }`}
+>
+                      <button
+                        onClick={() =>
+                          setRows((prev) =>
+                            prev.map((x, j) =>
+                              j === globalIndex
+                                ? { ...x, expanded: !x.expanded }
+                                : x
+                            )
+                          )
+                        }
+                        className="text-gray-400 hover:text-gray-700 transition"
+                      >
+                        {item.expanded ? (
+                          <ChevronUp size={20} />
+                        ) : (
+                          <ChevronDown size={20} />
+                        )}
+                      </button>
+</div>
+                      {item.expanded && (
+                        <div className="mt-3 break-words text-sm space-y-1">
+                          
+                          <p>
+                                  <strong>Notes:</strong> {item.notes || "-"}
+                                </p>
+                          <div className="mt-3">
+                          <Button
+                            onClick={() => {
+                              setEditItem(item);
+                              setShowEditModal(true);
+                            }}
+                           className="w-full bg-[#001e42] text-white hover:bg-[#DCC9A3] transition"
+                          >
+                            Edit Item
+                          </Button>
+                          </div>
+                        </div>
                       )}
-
-                      {/* Notes */}
-                      <td className="p-2">
-                        <textarea
-                          className="border p-1 rounded w-full"
-                          value={r.notes}
-                          onChange={(e) =>
-                            setRows((prev) =>
-                              prev.map((x, j) =>
-                                j === globalIndex
-                                  ? { ...x, notes: e.target.value }
-                                  : x
-                              )
-                            )
-                          }
-                        />
-                      </td>
-
-                      {/* Actions */}
-                      <td className="p-2 text-center">
-                        <button
-                          onClick={() => deleteRow(globalIndex)}
-                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
+                    </div>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-
-          {/* Añadir nueva fila */}
-          <div className="mt-6 flex gap-3">
-            <select
-              value={newItemCategory}
-              onChange={(e) => setNewItemCategory(e.target.value)}
-              className="border p-2 rounded-lg flex-1 bg-white"
-            >
-              <option value="">Select Category</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              <option value="__new">+ Create New Category...</option>
-            </select>
-
-            {newItemCategory === "__new" && (
-              <input
-                type="text"
-                placeholder="New Category Name"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                className="border p-2 rounded-lg flex-1"
-              />
-            )}
-
-            <button
-              onClick={() => {
-                if (newItemCategory === "__new") {
-                  if (!newCategory.trim()) return alert("Enter a category name");
-                  setRows((prev) => [
-                    ...prev,
-                    { category: newCategory.trim(), task: "", notes: "", done: false },
-                  ]);
-                  setNewCategory("");
-                  setNewItemCategory("");
-                } else addRow();
-              }}
-              className="bg-[#001e42] text-white px-4 py-2 rounded-lg hover:bg-[#DCC9A3] transition"
-            >
-              + Add New Item
-            </button>
-          </div>
-
-          {/* Guardar */}
-          <div className="mt-6">
-            <button
-              onClick={saveChecklist}
-              disabled={saving}
-              className="w-full bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition"
-            >
-              {saving ? "Saving..." : "Save Checklist"}
-            </button>
-          </div>
+                })}
+              </div>
+            );
+          })}
         </section>
+
+        {/* Guardar */}
+        <div className="mt-8">
+          <Button
+            onClick={saveChecklist}
+            disabled={saving}
+            className="w-full bg-[#001e42] text-white py-3 rounded-xl hover:bg-[#DCC9A3]"
+          >
+            {saving ? "Saving..." : "Save Checklist"}
+          </Button>
+        </div>
       </main>
+
+      {/* 🔵 Modal Editar Item */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="sm:max-w-md rounded-2xl shadow-xl bg-white">
+          <DialogHeader>
+            <DialogTitle>Edit Item</DialogTitle>
+          </DialogHeader>
+          {editItem && (
+            <div className="space-y-3 mt-2">
+              <select
+                className="w-full border rounded-xl p-2 bg-gray-50 focus:ring-2 focus:ring-[#DCC9A3]"
+                value={editItem.category}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, category: e.target.value })
+                }
+              >
+                {budgetCategories.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+              <label className="text-sm">Task</label>
+              <Input
+                placeholder="Task"
+                className="rounded-xl"
+                value={editItem.task}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, task: e.target.value })
+                }
+              />
+              <label className="text-sm">Notes</label>
+              <textarea
+                className="w-full border rounded-xl p-2 resize-y"
+                placeholder="Notes"
+                value={editItem.notes}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, notes: e.target.value })
+                }
+              />
+            </div>
+          )}
+          <DialogFooter className="mt-5 flex justify-center">
+            <Button
+              onClick={handleEditSave}
+        className="w-2/3 bg-[#001e42] text-white font-medium hover:bg-[#DCC9A3] hover:text-[#001e42] transition rounded-xl py-2"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* 🔵 Modal Añadir Nuevo Item */}
+<Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+  <DialogContent className="sm:max-w-md rounded-2xl shadow-xl bg-white">
+    <DialogHeader>
+      <DialogTitle>Add New Item</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-3 mt-2">
+      <select
+        className="w-full border rounded-xl p-2 bg-gray-50 focus:ring-2 focus:ring-[#DCC9A3]"
+        value={newItem.category}
+        onChange={(e) =>
+          setNewItem({ ...newItem, category: e.target.value })
+        }
+      >
+        {budgetCategories.map((b) => (
+          <option key={b} value={b}>
+            {b}
+          </option>
+        ))}
+      </select>
+<label className="text-sm">Task</label>
+      <Input
+        placeholder="Task"
+        className="rounded-xl"
+        value={newItem.task}
+        onChange={(e) => setNewItem({ ...newItem, task: e.target.value })}
+      />
+      <label className="text-sm">Notes</label>
+      <textarea
+        className="w-full border rounded-xl p-2 resize-y"
+        placeholder="Notes"
+        value={newItem.notes}
+        onChange={(e) => setNewItem({ ...newItem, notes: e.target.value })}
+      />
+    </div>
+
+    <DialogFooter className="mt-4 flex gap-3">
+      <Button
+        onClick={() => {
+          if (!newItem.task.trim()) {
+            alert("Please enter a task name.");
+            return;
+          }
+          setRows((prev) => [...prev, { ...newItem, expanded: false }]);
+          setNewItem({
+            category: budgetCategories[0] || "Others",
+            task: "",
+            notes: "",
+            done: false,
+          });
+          setShowAddModal(false);
+        }}
+        className="w-2/3 bg-[#001e42] text-white font-medium hover:bg-[#DCC9A3] hover:text-[#001e42] transition rounded-xl py-2"
+      >
+        Add
+      </Button>
+     
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
     </>
   );
 }

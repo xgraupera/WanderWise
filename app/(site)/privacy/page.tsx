@@ -6,7 +6,7 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <NavBar />
-      <main className="p-8 bg-gray-50 text-center space-y-8">
+      <main className="p-8 bg-gray-50 text-center space-y-8 pt-20">
         <h1 className="text-4xl font-bold">🔒 Privacy Policy</h1>
 
         <section className="max-w-3xl mx-auto text-gray-700 leading-relaxed space-y-4 text-justify">
@@ -36,10 +36,10 @@ export default function PrivacyPolicyPage() {
 
           <h2 className="text-2xl font-semibold mt-6">4. Your Rights</h2>
           <p>
-            You can request to delete your account or any stored data at any time by contacting us at{" "}
-            <a href="mailto:wanderwiselyapp@gmail.com" className="underline text-[#001e42]">
-              wanderwiselyapp@gmail.com
-            </a>.
+            You can request to delete your account or any stored data at any time by contacting us from our {" "}
+            <a href="/contact" className="underline text-[#001e42]">
+              Contact
+            </a> page.
           </p>
 
           <p className="text-gray-500 mt-8">

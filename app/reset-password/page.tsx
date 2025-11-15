@@ -49,14 +49,14 @@ function ResetPasswordForm() {
     );
 
   return (
-    <main className="p-8 space-y-10 bg-gray-50">
+    <main className="p-8 space-y-10 bg-gray-50 pt-25">
     <div className="flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="bg-white shadow-md rounded-2xl p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold mb-4 text-center">
-          🔒 Reset Password
+          Reset Password
         </h1>
         <p className="text-gray-600 text-center mb-6 text-sm">
-          Choose a strong new password to secure your Wanderwise account.
+          Choose a strong new password to secure your WanderWisely account.
         </p>
 
         <form
