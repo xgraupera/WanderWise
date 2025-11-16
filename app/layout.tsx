@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import type { ReactNode } from "react";
 import FooterBar from "@/components/FooterBar";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       >
         {children}
         <FooterBar />
+        <SpeedInsights />
       </body>
     </html>
   );
